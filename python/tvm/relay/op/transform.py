@@ -2013,3 +2013,16 @@ def trilu(data, k, upper=True):
     if not isinstance(k, Expr):
         k = const(k, dtype="int32")
     return _make.trilu(data, k, upper)
+
+def axis_abs(data, axis=None):
+    """Computes the absolute value of the elements of a tensor along an axis.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    axis : Optional[int]
+        The axis along which to compute the absolute value. If None, the absolute value is computed
+    """
+    return _make.axis_abs(data, axis)

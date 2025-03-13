@@ -1284,3 +1284,6 @@ def gather_shape_func(attrs, inputs, _):
     Shape func for gather operator.
     """
     return [_gather_shape(inputs[0], inputs[1], attrs.axis)]
+
+@_reg.register_strategy("axis_abs", strategy.axis_abs_strategy)
+@_reg.register_shape_func("axis_abs", False, elemwise_shape_func)

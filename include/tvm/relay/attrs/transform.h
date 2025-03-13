@@ -609,6 +609,15 @@ struct TriluAttrs : public tvm::AttrsNode<TriluAttrs> {
   }
 };  // struct TriluAttrs
 
+// 示例：声明轴操作属性
+struct AxisAbsAttrs : public tvm::AttrsNode<AxisAbsAttrs> {
+  int axis;
+  TVM_DECLARE_ATTRS(AxisAbsAttrs, "relay.attrs.AxisAbsAttrs") {
+    TVM_ATTR_FIELD(axis).describe("Axis to compute absolute value");
+  }
+};
+
+
 }  // namespace relay
 }  // namespace tvm
 #endif  // TVM_RELAY_ATTRS_TRANSFORM_H_

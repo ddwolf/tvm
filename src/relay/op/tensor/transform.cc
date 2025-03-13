@@ -4434,5 +4434,25 @@ RELAY_REGISTER_OP("fixed_point_multiply_per_axis")
     .set_attrs_type<FixedPointMultiplyPerAxisAttrs>()
     .set_support_level(10);
 
+TVM_REGISTER_GLOBAL("relay.op.axis_abs.compute")
+  .set_body_typed([](const Tensor& data, const AxisAbsAttrs* attrs) {
+    return topi::abs(data, attrs->axis); // TODO
+  });
+
+TVM_REGISTER_GLOBAL("relay.op.axis_abs.schedule")
+  .set_body_typed([](const Attrs& attrs, const Array<Tensor>& outs, const Target& target) {
+    return topi::generic_schedule(target, outs);
+  });
+
+Expr MakeAxisAbs(Expr data, int axis) {
+  auto attrs = make_object<AxisAbsAttrs>();
+  attrs->axis = axis;
+  static const Op& op = Op::Get("axis_abs");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.axis_abs")
+    .set_body_typed(MakeAxisAbs);
+
+
 }  // namespace relay
 }  // namespace tvm

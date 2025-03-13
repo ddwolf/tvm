@@ -169,5 +169,21 @@ bool ShapeOfRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
   return true;
 }
 
+// 示例：类型推导函数
+bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, const TypeReporter& reporter) {
+  const auto* data = types.as<TensorTypeNode>();
+  reporter->Assign(types[1], TensorType(data->shape, data->dtype));
+  return true;
+}
+
+RELAY_REGISTER_OP("axis_abs")
+  .describe("Compute absolute value along a specific axis")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<AxisAbsAttrs>()
+  .set_support_level(1)
+  .add_type_rel("AxisAbs", AxisAbsRel);
+// 示例结束
+
 }  // namespace relay
 }  // namespace tvm
