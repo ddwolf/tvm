@@ -2097,21 +2097,21 @@ def wrap_compute_layout_transform(topi_compute, schedule_rule="None"):
     return _compute_layout_transform
 
 
-def wrap_compute_axis_abs(topi_compute):
-    """wrap axis_abs topi compute"""
+# def wrap_compute_axis_abs(topi_compute):
+#     """wrap axis_abs topi compute"""
 
-    def _compute_axis_abs(attrs, inputs, out_type):
-        return [topi_compute(inputs[0], attrs.axis)]
+#     def _compute_axis_abs(attrs, inputs, out_type):
+#         return [topi_compute(inputs[0], attrs.axis)]
 
-    return _compute_axis_abs
+#     return _compute_axis_abs
 
-@override_native_generic_func("axis_abs_strategy")
-def axis_abs_strategy(attrs, inputs, out_type, target):
-    """axis_abs generic strategy"""
-    strategy = _op.OpStrategy()
-    strategy.add_implementation(
-        wrap_compute_axis_abs(topi.axis_abs),
-        wrap_topi_schedule(topi.generic.schedule_injective),
-        name="axis_abs.generic",
-    )
-    return strategy
+# @override_native_generic_func("axis_abs_strategy")
+# def axis_abs_strategy(attrs, inputs, out_type, target):
+#     """axis_abs generic strategy"""
+#     strategy = _op.OpStrategy()
+#     strategy.add_implementation(
+#         wrap_compute_axis_abs(topi.axis_abs),
+#         wrap_topi_schedule(topi.generic.schedule_injective),
+#         name="axis_abs.generic",
+#     )
+#     return strategy

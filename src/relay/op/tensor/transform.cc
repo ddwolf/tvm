@@ -4434,15 +4434,36 @@ RELAY_REGISTER_OP("fixed_point_multiply_per_axis")
     .set_attrs_type<FixedPointMultiplyPerAxisAttrs>()
     .set_support_level(10);
 
-TVM_REGISTER_GLOBAL("relay.op.axis_abs.compute")
-  .set_body_typed([](const Tensor& data, const AxisAbsAttrs* attrs) {
-    return topi::abs(data, attrs->axis); // TODO
-  });
+// TVM_REGISTER_GLOBAL("relay.op.axis_abs.compute")
+//   .set_body_typed([](const te::Tensor& data, const AxisAbsAttrs* attrs) {
+//     return topi::abs(data); // TODO
+//   });
 
-TVM_REGISTER_GLOBAL("relay.op.axis_abs.schedule")
-  .set_body_typed([](const Attrs& attrs, const Array<Tensor>& outs, const Target& target) {
-    return topi::generic_schedule(target, outs);
-  });
+// TVM_REGISTER_GLOBAL("relay.op.axis_abs.schedule")
+//   .set_body_typed([](const Attrs& attrs, const Array<te::Tensor>& outs, const Target& target) {
+//     return topi::generic_schedule(target, outs);
+//   });
+
+TVM_REGISTER_NODE_TYPE(AxisAbsAttrs);
+
+
+Array<te::Tensor> AxisAbsCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
+            const Type& out_type) {
+    const AxisAbsAttrs* param = attrs.as<AxisAbsAttrs>();
+    ICHECK(param != nullptr);
+    const int axis = param->axis;
+    return {topi::abs(inputs[0])};
+}
+
+RELAY_REGISTER_OP("axis_abs")
+  .describe("Compute absolute value along a specific axis")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<AxisAbsAttrs>()
+  .set_support_level(3)
+  .add_type_rel("AxisAbs", AxisAbsRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque)
+  .set_attr<FTVMCompute>("FTVMCompute", AxisAbsCompute);
 
 Expr MakeAxisAbs(Expr data, int axis) {
   auto attrs = make_object<AxisAbsAttrs>();

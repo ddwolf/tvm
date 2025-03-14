@@ -171,19 +171,24 @@ bool ShapeOfRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
 
 // 示例：类型推导函数
 bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, const TypeReporter& reporter) {
-  const auto* data = types.as<TensorTypeNode>();
+  ICHECK_EQ(types.size(), 2);
+
+  const auto* data = types[0].as<TensorTypeNode>();
+  if (data == nullptr) {
+      ICHECK(types[0].as<IncompleteTypeNode>())
+          << "cast: expect input type to be TensorType but get " << types[0];
+      return false;
+  }
+  const auto* param = attrs.as<AxisAbsAttrs>();
+  const int ndim = static_cast<int>(data->shape.size());
+  const int axis = param->axis;
+  ICHECK(0 <= axis && axis < ndim)
+      << "axis_abs only accepts `axis` in [0, data.ndim - 1]"
+      << ", but got axis = " << axis << ", and data.ndim = " << ndim;
   reporter->Assign(types[1], TensorType(data->shape, data->dtype));
   return true;
 }
 
-RELAY_REGISTER_OP("axis_abs")
-  .describe("Compute absolute value along a specific axis")
-  .set_num_inputs(1)
-  .add_argument("data", "Tensor", "Input tensor")
-  .set_attrs_type<AxisAbsAttrs>()
-  .set_support_level(1)
-  .add_type_rel("AxisAbs", AxisAbsRel);
-// 示例结束
 
 }  // namespace relay
 }  // namespace tvm

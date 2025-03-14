@@ -239,5 +239,9 @@ TVM_REGISTER_GLOBAL("topi.adv_index").set_body([](TVMArgs args, TVMRetValue* rv)
   *rv = adv_index(args[0], args[1]);
 });
 
+TVM_REGISTER_GLOBAL("topi.axis_abs").set_body([](TVMArgs args, TVMRetValue* rv) {
+  *rv = abs(args[0]);
+});
+
 }  // namespace topi
 }  // namespace tvm

@@ -65,6 +65,7 @@ _reg.register_injective_schedule("unravel_index")
 _reg.register_injective_schedule("sparse_to_dense")
 _reg.register_injective_schedule("matrix_set_diag")
 _reg.register_injective_schedule("adv_index")
+_reg.register_injective_schedule("axis_abs")
 
 
 # concatenate
@@ -1285,5 +1286,9 @@ def gather_shape_func(attrs, inputs, _):
     """
     return [_gather_shape(inputs[0], inputs[1], attrs.axis)]
 
-@_reg.register_strategy("axis_abs", strategy.axis_abs_strategy)
-@_reg.register_shape_func("axis_abs", False, elemwise_shape_func)
+# @_reg.register_compute("axis_abs")
+# def compute_axis_abs(attrs, inputs, output_type):
+#     return topi.axis_abs(inputs[0], attrs.axis)
+
+# _reg.register_strategy("axis_abs", strategy.axis_abs_strategy)
+# _reg.register_shape_func("axis_abs", False, elemwise_shape_func)

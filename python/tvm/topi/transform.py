@@ -1104,3 +1104,22 @@ def trilu(data, k, upper):
         return tvm.tir.Select(check_position, value, tvm.tir.const(0, data.dtype))
 
     return te.compute(data.shape, _apply_trilu, name="trilu", tag=topi.tag.ELEMWISE)
+
+def axis_abs(x, axis):
+    """Compute the absolute value of the elements along an axis.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+        
+    axis : int
+        The axis to compute the absolute value along.
+
+    Returns
+    -------
+    ret : tvm.te.Tensor
+        The resulting tensor.
+    """
+    
+    return cpp.axis_abs(x, axis)
