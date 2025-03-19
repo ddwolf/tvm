@@ -66,6 +66,7 @@ _reg.register_injective_schedule("sparse_to_dense")
 _reg.register_injective_schedule("matrix_set_diag")
 _reg.register_injective_schedule("adv_index")
 _reg.register_injective_schedule("axis_abs")
+# _reg.register_broadcast_schedule("ts_sum")
 
 
 # concatenate
@@ -1292,3 +1293,15 @@ def gather_shape_func(attrs, inputs, _):
 
 # _reg.register_strategy("axis_abs", strategy.axis_abs_strategy)
 # _reg.register_shape_func("axis_abs", False, elemwise_shape_func)
+
+@_reg.register_compute("ts_sum")
+def compute_ts_sum(attrs, inputs, output_type):
+    window = attrs.window
+    axis = attrs.axis
+    data = inputs[0]
+    def compute(input_data):
+        return topi.ts_sum(input_data, window, axis)
+    return compute
+
+_reg.register_strategy("ts_sum", strategy.ts_sum_strategy)
+_reg.register_shape_func("ts_sum", False, elemwise_shape_func)

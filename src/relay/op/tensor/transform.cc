@@ -4451,7 +4451,6 @@ Array<te::Tensor> AxisAbsCompute(const Attrs& attrs, const Array<te::Tensor>& in
             const Type& out_type) {
     const AxisAbsAttrs* param = attrs.as<AxisAbsAttrs>();
     ICHECK(param != nullptr);
-    const int axis = param->axis;
     return {topi::abs(inputs[0])};
 }
 
@@ -4474,6 +4473,33 @@ Expr MakeAxisAbs(Expr data, int axis) {
 TVM_REGISTER_GLOBAL("relay.op._make.axis_abs")
     .set_body_typed(MakeAxisAbs);
 
+// Array<te::Tensor> TsSumCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
+//             const Type& out_type) {
+//     const TsCommonAttrs* param = attrs.as<TsCommonAttrs>();
+//     ICHECK(param != nullptr);
+//     const int window = param->window;
+//     return {topi::ts_sum(inputs[0], window)};
+// }
 
+TVM_REGISTER_NODE_TYPE(TsCommonAttrs);
+
+RELAY_REGISTER_OP("ts_sum")
+  .describe("Compute time series sum for 1d input")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<TsCommonAttrs>()
+  .set_support_level(3)
+  .add_type_rel("TsSum", TsWindowRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeTsSum(Expr data, int window, int axis) {
+  auto attrs = make_object<TsCommonAttrs>();
+  attrs->axis = axis;
+  attrs->window = window;
+  static const Op& op = Op::Get("ts_sum");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.ts_sum")
+    .set_body_typed(MakeTsSum);
 }  // namespace relay
 }  // namespace tvm

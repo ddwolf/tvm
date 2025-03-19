@@ -111,7 +111,17 @@ bool ShapeOfRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
  */
 bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, const TypeReporter& reporter);
 
-
+/*!
+ * \brief The ops using timeseries window of type relation.
+ *
+ * \param types The input and output types to the relation.
+ * \param num_inputs The number of input arguments.
+ * \param attrs The attributes
+ * \param reporter The reporter.
+ * \return true whether relation has been resolved.
+ */
+bool TsWindowRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+                const TypeReporter& reporter);
 }  // namespace relay
 }  // namespace tvm
 

@@ -189,6 +189,25 @@ bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, co
   return true;
 }
 
+bool TsWindowRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+                const TypeReporter& reporter) {
+  ICHECK_EQ(types.size(), 2);
+  const auto* data = types[0].as<TensorTypeNode>();
+  if (data == nullptr) {
+    ICHECK(types[0].as<IncompleteTypeNode>())
+        << "cast: expect input type to be TensorType but get " << types[0];
+    return false;
+  }
+  const auto* param = attrs.as<TsCommonAttrs>();
+  const int window = param->window;
+  ICHECK(window > 0) << "TsWindow only accepts `window` > 0, but got window = " << window;
+  const int axis = param->axis;
+  ICHECK(0 <= axis && axis < data->shape.size()) << "TsWindow only accepts `axis` in [0, data.ndim - 1]"
+                                                 << ", but got axis = " << axis
+                                                 << ", and data.ndim = " << data->shape.size();
+  reporter->Assign(types[1], TensorType(data->shape, data->dtype));
+  return true;
+}
 
 }  // namespace relay
 }  // namespace tvm

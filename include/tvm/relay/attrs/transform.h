@@ -618,6 +618,15 @@ struct AxisAbsAttrs : public tvm::AttrsNode<AxisAbsAttrs> {
 };
 
 
+struct TsCommonAttrs: public tvm::AttrsNode<TsCommonAttrs> {
+  int axis;
+  int window;
+  TVM_DECLARE_ATTRS(TsCommonAttrs, "relay.attrs.TsCommonAttrs") {
+    TVM_ATTR_FIELD(axis).set_default(0).describe("Timeseries along which axis");
+    TVM_ATTR_FIELD(window).set_default(1).describe("Window size");
+  }
+};
+
 }  // namespace relay
 }  // namespace tvm
 #endif  // TVM_RELAY_ATTRS_TRANSFORM_H_

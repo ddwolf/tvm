@@ -2026,3 +2026,16 @@ def axis_abs(data, axis=None):
         The axis along which to compute the absolute value. If None, the absolute value is computed
     """
     return _make.axis_abs(data, axis)
+
+def ts_sum(data, window=1, axis=0):
+    """Computes the sum of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_sum(data, window, axis)
