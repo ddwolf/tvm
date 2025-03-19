@@ -2115,3 +2115,22 @@ def wrap_compute_layout_transform(topi_compute, schedule_rule="None"):
 #         name="axis_abs.generic",
 #     )
 #     return strategy
+
+def wrap_compute_ts_sum(topi_compute):
+    """wrap ts_sum topi compute"""
+
+    def _compute_ts_sum(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.window, attrs.axis)]
+
+    return _compute_ts_sum
+
+@override_native_generic_func("ts_sum_strategy")
+def ts_sum_strategy(attrs, inputs, out_type, target):
+    """ts_sum generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_sum(topi.ts_sum),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="ts_sum.generic",
+    )
+    return strategy
