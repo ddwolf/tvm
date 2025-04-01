@@ -4435,7 +4435,7 @@ RELAY_REGISTER_OP("fixed_point_multiply_per_axis")
     .set_support_level(10);
 
 // TVM_REGISTER_GLOBAL("relay.op.axis_abs.compute")
-//   .set_body_typed([](const te::Tensor& data, const AxisAbsAttrs* attrs) {
+//   .set_body_typed([](const te::Tensor& data, const AxisAttrs* attrs) {
 //     return topi::abs(data); // TODO
 //   });
 
@@ -4444,12 +4444,12 @@ RELAY_REGISTER_OP("fixed_point_multiply_per_axis")
 //     return topi::generic_schedule(target, outs);
 //   });
 
-TVM_REGISTER_NODE_TYPE(AxisAbsAttrs);
+TVM_REGISTER_NODE_TYPE(AxisAttrs);
 
 
 Array<te::Tensor> AxisAbsCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
             const Type& out_type) {
-    const AxisAbsAttrs* param = attrs.as<AxisAbsAttrs>();
+    const AxisAttrs* param = attrs.as<AxisAttrs>();
     ICHECK(param != nullptr);
     return {topi::abs(inputs[0])};
 }
@@ -4458,14 +4458,14 @@ RELAY_REGISTER_OP("axis_abs")
   .describe("Compute absolute value along a specific axis")
   .set_num_inputs(1)
   .add_argument("data", "Tensor", "Input tensor")
-  .set_attrs_type<AxisAbsAttrs>()
+  .set_attrs_type<AxisAttrs>()
   .set_support_level(3)
   .add_type_rel("AxisAbs", AxisAbsRel)
   .set_attr<TOpPattern>("TOpPattern", kOpaque)
   .set_attr<FTVMCompute>("FTVMCompute", AxisAbsCompute);
 
 Expr MakeAxisAbs(Expr data, int axis) {
-  auto attrs = make_object<AxisAbsAttrs>();
+  auto attrs = make_object<AxisAttrs>();
   attrs->axis = axis;
   static const Op& op = Op::Get("axis_abs");
   return Call(op, {data}, Attrs(attrs), {});
@@ -4484,7 +4484,7 @@ TVM_REGISTER_GLOBAL("relay.op._make.axis_abs")
 TVM_REGISTER_NODE_TYPE(TsCommonAttrs);
 
 RELAY_REGISTER_OP("ts_sum")
-  .describe("Compute time series sum for 1d input")
+  .describe("Compute time series sum for 1d/2d input")
   .set_num_inputs(1)
   .add_argument("data", "Tensor", "Input tensor")
   .set_attrs_type<TsCommonAttrs>()
@@ -4501,5 +4501,126 @@ Expr MakeTsSum(Expr data, int window, int axis) {
 }
 TVM_REGISTER_GLOBAL("relay.op._make.ts_sum")
     .set_body_typed(MakeTsSum);
+
+TVM_REGISTER_NODE_TYPE(PeriodMoveAxisAttrs);
+
+RELAY_REGISTER_OP("delta")
+  .describe("Compute delta value of tensor along specific axis")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<PeriodMoveAxisAttrs>()
+  .set_support_level(3)
+  .add_type_rel("Delta", IdentityRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeDelta(Expr data, int period, int axis) {
+  auto attrs = make_object<PeriodMoveAxisAttrs>();
+  attrs->axis = axis;
+  attrs->period = period;
+  static const Op& op = Op::Get("delta");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+
+TVM_REGISTER_GLOBAL("relay.op._make.delta")
+    .set_body_typed(MakeDelta);
+
+RELAY_REGISTER_OP("delay")
+  .describe("Compute delay value of tensor along specific axis")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<PeriodMoveAxisAttrs>()
+  .set_support_level(3)
+  .add_type_rel("Delay", IdentityRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeDelay(Expr data, int period, int axis) {
+  auto attrs = make_object<PeriodMoveAxisAttrs>();
+  attrs->axis = axis;
+  attrs->period = period;
+  static const Op& op = Op::Get("delay");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+
+TVM_REGISTER_GLOBAL("relay.op._make.delay")
+    .set_body_typed(MakeDelay);
+
+TVM_REGISTER_NODE_TYPE(TsCommonAttrs);
+
+RELAY_REGISTER_OP("ts_max")
+  .describe("Compute time series max for 1d/2d input")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<TsCommonAttrs>()
+  .set_support_level(3)
+  .add_type_rel("TsMax", TsWindowRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeTsMax(Expr data, int window, int axis) {
+  auto attrs = make_object<TsCommonAttrs>();
+  attrs->axis = axis;
+  attrs->window = window;
+  static const Op& op = Op::Get("ts_max");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.ts_max")
+    .set_body_typed(MakeTsMax);
+
+RELAY_REGISTER_OP("ts_min")
+  .describe("Compute time series min for 1d/2d input")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<TsCommonAttrs>()
+  .set_support_level(3)
+  .add_type_rel("TsMin", TsWindowRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeTsMin(Expr data, int window, int axis) {
+  auto attrs = make_object<TsCommonAttrs>();
+  attrs->axis = axis;
+  attrs->window = window;
+  static const Op& op = Op::Get("ts_min");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.ts_min")
+    .set_body_typed(MakeTsMin);
+
+RELAY_REGISTER_OP("ts_mean")
+  .describe("Compute time series mean for 1d/2d input")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<TsCommonAttrs>()
+  .set_support_level(3)
+  .add_type_rel("TsMean", TsWindowRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeTsMean(Expr data, int window, int axis) {
+  auto attrs = make_object<TsCommonAttrs>();
+  attrs->axis = axis;
+  attrs->window = window;
+  static const Op& op = Op::Get("ts_mean");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.ts_mean")
+    .set_body_typed(MakeTsMean);
+
+RELAY_REGISTER_OP("ts_median")
+  .describe("Compute time series median for 1d/2d input")
+  .set_num_inputs(1)
+  .add_argument("data", "Tensor", "Input tensor")
+  .set_attrs_type<TsCommonAttrs>()
+  .set_support_level(3)
+  .add_type_rel("TsMedian", TsWindowRel)
+  .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeTsMedian(Expr data, int window, int axis) {
+  auto attrs = make_object<TsCommonAttrs>();
+  attrs->axis = axis;
+  attrs->window = window;
+  static const Op& op = Op::Get("ts_median");
+  return Call(op, {data}, Attrs(attrs), {});
+}
+TVM_REGISTER_GLOBAL("relay.op._make.ts_median")
+    .set_body_typed(MakeTsMedian);
+
 }  // namespace relay
 }  // namespace tvm

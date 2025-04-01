@@ -1143,25 +1143,250 @@ def ts_sum(x, window=1, axis=0):
     cumsum_tensor = tvm.topi.cumsum(x, axis=axis)
     if len(x.shape) == 1:
         return te.compute(x.shape,
-                        lambda *i: te.if_then_else(
-                            i[0] < window,
-                            cumsum_tensor[i[0]],
-                            cumsum_tensor[i[0]] - cumsum_tensor[i[0] - window]
-                        ), name='ts_sum', tag=topi.tag.ELEMWISE)
+                          lambda *i: te.if_then_else(
+                              i[0] < window,
+                              cumsum_tensor[i[0]],
+                              cumsum_tensor[i[0]] -
+                              cumsum_tensor[i[0] - window]
+                          ), name='ts_sum', tag=topi.tag.ELEMWISE)
     elif len(x.shape) == 2:
         if axis == 0:
             return te.compute(x.shape,
-                            lambda *i: te.if_then_else(
-                                i[axis] < window,
-                                cumsum_tensor[i[0], i[1]],
-                                cumsum_tensor[i[0], i[1]] - cumsum_tensor[i[0] - window, i[1]]
-                            ), name='ts_sum', tag=topi.tag.ELEMWISE)
+                              lambda *i: te.if_then_else(
+                                  i[axis] < window,
+                                  cumsum_tensor[i[0], i[1]],
+                                  cumsum_tensor[i[0], i[1]] -
+                                  cumsum_tensor[i[0] - window, i[1]]
+                              ), name='ts_sum', tag=topi.tag.ELEMWISE)
         else:
             return te.compute(x.shape,
-                            lambda *i: te.if_then_else(
-                                i[axis] < window,
-                                cumsum_tensor[i[0], i[1]],
-                                cumsum_tensor[i[0], i[1]] - cumsum_tensor[i[0], i[1] - window]
-                           ), name='ts_sum', tag=topi.tag.ELEMWISE)
+                              lambda *i: te.if_then_else(
+                                  i[axis] < window,
+                                  cumsum_tensor[i[0], i[1]],
+                                  cumsum_tensor[i[0], i[1]] -
+                                  cumsum_tensor[i[0], i[1] - window]
+                              ), name='ts_sum', tag=topi.tag.ELEMWISE)
     else:
         raise NotImplementedError("ts_sum only supports 1D and 2D tensors")
+
+
+def delta(x, period=1, axis=0):
+    """Compute the delta value of the elements along an axis.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    axis : int
+        The axis to compute the delta value along.
+
+    Returns
+    -------
+    ret : tvm.te.Tensor
+        The resulting tensor.
+    """
+    if len(x.shape) == 1:
+        return te.compute(x.shape,
+                          lambda i: te.if_then_else(
+                              i < period,
+                              float('nan'),
+                              x[i] - x[i - period]
+                          ), name='delta', tag=topi.tag.ELEMWISE)
+    elif len(x.shape) == 2:
+        if axis == 0:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[0] < period,
+                                  float('nan'),
+                                  x[i[0], i[1]] - x[i[0] - period, i[1]]
+                              ), name='delta', tag=topi.tag.ELEMWISE)
+        else:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[1] < period,
+                                  float('nan'),
+                                  x[i[0], i[1]] - x[i[0], i[1] - period]
+                              ), name='delta', tag=topi.tag.ELEMWISE)
+    else:
+        raise NotImplementedError("delta only supports 1D and 2D tensors")
+
+
+def delay(x, period=1, axis=0):
+    """Compute the delay value of the elements along an axis.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    axis : int
+        The axis to compute the delay value along.
+
+    Returns
+    -------
+    ret : tvm.te.Tensor
+        The resulting tensor.
+    """
+    if len(x.shape) == 1:
+        return te.compute(x.shape,
+                          lambda i: te.if_then_else(
+                              i < period,
+                              float('nan'),
+                              x[i - period]
+                          ), name='delay', tag=topi.tag.ELEMWISE)
+    elif len(x.shape) == 2:
+        if axis == 0:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[0] < period,
+                                  float('nan'),
+                                  x[i[0] - period, i[1]]
+                              ), name='delay', tag=topi.tag.ELEMWISE)
+        else:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[1] < period,
+                                  float('nan'),
+                                  x[i[0], i[1] - period]
+                              ), name='delay', tag=topi.tag.ELEMWISE)
+    else:
+        raise NotImplementedError("delay only supports 1D and 2D tensors")
+
+
+def ts_window(x, window, axis):
+    if len(x.shape) == 1:
+        tswindow_shape = (x.shape[0], window)
+        tswindow = te.compute(tswindow_shape,
+                              lambda *i: te.if_then_else(
+                                  i[0] + i[1] < window,
+                                  x[0],
+                                  x[i[0] - window + i[1] + 1]
+                              ))
+    elif len(x.shape) == 2:
+        if axis == 0:
+            tswindow_shape = (x.shape[0], window, x.shape[1])
+            tswindow = te.compute(tswindow_shape,
+                                  lambda *i: te.if_then_else(
+                                      i[0] + i[1] < window,
+                                      x[0, i[2]],
+                                      x[i[0] - window + i[1] + 1, i[2]]
+                                  ))
+        else:
+            tswindow_shape = (x.shape[0], x.shape[1], window)
+            tswindow = te.compute(tswindow_shape,
+                                  lambda *i: te.if_then_else(
+                                      i[2] + i[1] < window,
+                                      x[i[0], 0],
+                                      x[i[0], i[1] - window + i[2] + 1]
+                                  ))
+    else:
+        raise NotImplementedError("ts_max only supports 1D and 2D tensors")
+    return tswindow
+
+
+def ts_max(x, window=1, axis=0):
+    """Compute the maximum value of the elements along an axis in the sliding window.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    window : int
+        The window size to compute the maximum value.
+
+    axis : int
+        The axis to compute the maximum value along.
+
+    Returns
+    -------
+    ret : tvm.te.Tensor
+    """
+
+    tswindow = ts_window(x, window, axis)
+
+    return topi.max(tswindow, axis=axis+1)
+
+
+def ts_min(x, window=1, axis=0):
+    """Compute the minimum value of the elements along an axis in the sliding window.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    window : int
+        The window size to compute the minimum value.
+
+    axis : int
+        The axis to compute the minimum value along.
+
+    Returns
+    -------
+    """
+    tswindow = ts_window(x, window, axis)
+
+    return topi.min(tswindow, axis=axis+1)
+
+
+def ts_mean(x, window=1, axis=0):
+    """Compute the mean value of the elements along an axis in the sliding window.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    window : int
+        The window size to compute the mean value.
+
+    axis : int
+        The axis to compute the mean value along.
+
+    Returns
+    -------
+    """
+    tswindow = ts_window(x, window, axis)
+    return topi.divide(topi.sum(tswindow, axis=axis+1), window)
+
+
+def ts_median(x, window=1, axis=0):
+    """Compute the median value of the elements along an axis in the sliding window.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    window : int
+        The window size to compute the median value.
+
+    axis : int
+        The axis to compute the median value along.
+
+    Returns
+    -------
+    """
+    tswindow = ts_window(x, window, axis)
+    target_axis = axis + 1
+    sorted_indices = topi.argsort(tswindow, axis=target_axis, dtype=x.dtype)
+
+    def _compute_win_odd(*indices):
+        l_indices = list(indices)
+        l_indices.append(sorted_indices[target_axis][window//2])
+        return tswindow[tuple(l_indices)]
+
+    def _compute_win_even(*indices):
+        l_indices = list(indices)
+        l_indices1 = l_indices.copy()
+        l_indices2 = l_indices.copy()
+        l_indices1.append(sorted_indices[target_axis][window//2-1])
+        l_indices2.append(sorted_indices[target_axis][window//2])
+        return (tswindow[tuple(l_indices1)] + tswindow[tuple(l_indices2)]) / 2
+
+    if window % 2 == 0:
+        return te.compute(x.shape, _compute_win_even, name='ts_median', tag=topi.tag.ELEMWISE)
+    else:
+        return te.compute(x.shape, _compute_win_odd, name='ts_median', tag=topi.tag.ELEMWISE)

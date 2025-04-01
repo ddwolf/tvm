@@ -610,9 +610,9 @@ struct TriluAttrs : public tvm::AttrsNode<TriluAttrs> {
 };  // struct TriluAttrs
 
 // 示例：声明轴操作属性
-struct AxisAbsAttrs : public tvm::AttrsNode<AxisAbsAttrs> {
+struct AxisAttrs : public tvm::AttrsNode<AxisAttrs> {
   int axis;
-  TVM_DECLARE_ATTRS(AxisAbsAttrs, "relay.attrs.AxisAbsAttrs") {
+  TVM_DECLARE_ATTRS(AxisAttrs, "relay.attrs.AxisAttrs") {
     TVM_ATTR_FIELD(axis).describe("Axis to compute absolute value");
   }
 };
@@ -626,6 +626,15 @@ struct TsCommonAttrs: public tvm::AttrsNode<TsCommonAttrs> {
     TVM_ATTR_FIELD(window).set_default(1).describe("Window size");
   }
 };
+
+struct PeriodMoveAxisAttrs: public tvm::AttrsNode<PeriodMoveAxisAttrs> {
+  int axis;
+  int period;
+  TVM_DECLARE_ATTRS(PeriodMoveAxisAttrs, "relay.attrs.PeriodMoveAxisAttrs") {
+    TVM_ATTR_FIELD(axis).set_default(0).describe("Move along which axis");
+    TVM_ATTR_FIELD(period).set_default(1).describe("Period size");
+}
+};  // struct PeriodMoveAxisAttrs
 
 }  // namespace relay
 }  // namespace tvm

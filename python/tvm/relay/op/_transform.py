@@ -1305,3 +1305,91 @@ def compute_ts_sum(attrs, inputs, output_type):
 
 _reg.register_strategy("ts_sum", strategy.ts_sum_strategy)
 _reg.register_shape_func("ts_sum", False, elemwise_shape_func)
+
+
+@_reg.register_compute("delta")
+def compute_delta(attrs, inputs, output_type):
+    period = attrs.period
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.delta(input_data, period, axis)
+    return compute
+
+
+_reg.register_strategy("delta", strategy.delta_strategy)
+_reg.register_shape_func("delta", False, elemwise_shape_func)
+
+
+@_reg.register_compute("delay")
+def compute_delay(attrs, inputs, output_type):
+    delay = attrs.delay
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.delay(input_data, delay, axis)
+    return compute
+
+
+_reg.register_strategy("delay", strategy.delay_strategy)
+_reg.register_shape_func("delay", False, elemwise_shape_func)
+
+
+@_reg.register_compute("ts_max")
+def compute_ts_max(attrs, inputs, output_type):
+    window = attrs.window
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.ts_max(input_data, window, axis)
+    return compute
+
+
+_reg.register_strategy("ts_max", strategy.ts_max_strategy)
+_reg.register_shape_func("ts_max", False, elemwise_shape_func)
+
+
+@_reg.register_compute("ts_min")
+def compute_ts_min(attrs, inputs, output_type):
+    window = attrs.window
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.ts_min(input_data, window, axis)
+    return compute
+
+
+_reg.register_strategy("ts_min", strategy.ts_min_strategy)
+_reg.register_shape_func("ts_min", False, elemwise_shape_func)
+
+
+def compute_ts_mean(attrs, inputs, output_type):
+    window = attrs.window
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.ts_mean(input_data, window, axis)
+    return compute
+
+
+_reg.register_strategy("ts_mean", strategy.ts_mean_strategy)
+_reg.register_shape_func("ts_mean", False, elemwise_shape_func)
+
+
+def compute_ts_median(attrs, inputs, output_type):
+    window = attrs.window
+    axis = attrs.axis
+    data = inputs[0]
+
+    def compute(input_data):
+        return topi.ts_median(input_data, window, axis)
+    return compute
+
+
+_reg.register_strategy("ts_median", strategy.ts_median_strategy)
+_reg.register_shape_func("ts_median", False, elemwise_shape_func)

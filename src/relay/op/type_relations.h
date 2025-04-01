@@ -122,6 +122,11 @@ bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, co
  */
 bool TsWindowRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
                 const TypeReporter& reporter);
+
+
+bool PeriodMoveAxisRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+                       const TypeReporter& reporter);
+
 }  // namespace relay
 }  // namespace tvm
 

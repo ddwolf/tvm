@@ -1298,6 +1298,18 @@ def cumsum_strategy_cuda(attrs, inputs, out_type, target):
     return strategy
 
 
+@ts_sum_strategy.register(["cuda", "gpu"])
+def ts_sum_strategy_cuda(attrs, inputs, out_type, target):
+    """ts_sum cuda strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_sum(topi.cuda.ts_sum),
+        wrap_topi_schedule(topi.cuda.schedule_scan),
+        name="ts_sum.cuda",
+    )
+    return strategy
+
+
 @cumprod_strategy.register(["cuda", "gpu"])
 def cumprod_strategy_cuda(attrs, inputs, out_type, target):
     """cumprod cuda strategy"""

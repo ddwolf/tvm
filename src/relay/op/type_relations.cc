@@ -179,7 +179,7 @@ bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs, co
           << "cast: expect input type to be TensorType but get " << types[0];
       return false;
   }
-  const auto* param = attrs.as<AxisAbsAttrs>();
+  const auto* param = attrs.as<AxisAttrs>();
   const int ndim = static_cast<int>(data->shape.size());
   const int axis = param->axis;
   ICHECK(0 <= axis && axis < ndim)
@@ -208,6 +208,28 @@ bool TsWindowRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
   reporter->Assign(types[1], TensorType(data->shape, data->dtype));
   return true;
 }
+
+bool PeriodMoveAxisRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+                     const TypeReporter& reporter) {
+  ICHECK_EQ(types.size(), 2);
+  const auto* data = types[0].as<TensorTypeNode>();
+  if (data == nullptr) {
+    ICHECK(types[0].as<IncompleteTypeNode>())
+        << "cast: expect input type to be TensorType but get " << types[0];
+    return false;     
+  }
+  const auto* param = attrs.as<PeriodMoveAxisAttrs>();
+  const int period = param->period;
+  const int axis = param->axis;
+  ICHECK(0 <= axis && axis < data->shape.size()) << "PeriodMoveAxis only accepts `axis` in [0, data.ndim - 1]"
+                                                 << ", but got axis = " << axis
+                                                 << ", and data.ndim = " << data->shape.size();
+  ICHECK(period > 0) << "PeriodMove only accepts `period` > 0, but got period = " << period;
+  ICHECK(data->dtype.is_scalar()) << "PeriodMove only accepts scalar data type, but got " << data->dtype;
+  reporter->Assign(types[1], TensorType(data->shape, DataType::Float(32)));
+  return true;
+}
+
 
 }  // namespace relay
 }  // namespace tvm

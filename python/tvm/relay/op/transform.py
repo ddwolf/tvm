@@ -2039,3 +2039,172 @@ def ts_sum(data, window=1, axis=0):
         The size of the window to sum over.
     """
     return _make.ts_sum(data, window, axis)
+
+
+def delta(data, period=1, axis=0):
+    """Computes the difference between adjacent elements of a tensor along an axis.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    axis : int
+        The axis along which to compute the difference.
+    """
+    return _make.delta(data, period, axis)
+
+
+def delay(data, period=1, axis=0):
+    """Computes the delay of the elements of a tensor along an axis.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    axis : int
+        The axis along which to compute the delay.
+    """
+    return _make.delay(data, period, axis)
+
+
+def ts_max(data, window=1, axis=0):
+    """Computes the max of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_max(data, window, axis)
+
+
+def ts_min(data, window=1, axis=0):
+    """Computes the min of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_min(data, window, axis)
+
+
+def ts_mean(data, window=1, axis=0):
+    """Computes the mean of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_mean(data, window, axis)
+
+
+def ts_median(data, window=1, axis=0):
+    """Computes the median of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_median(data, window, axis)
+
+
+
+def delta(data, period=1, axis=0):
+    """Computes the difference between adjacent elements of a tensor along an axis.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    axis : int
+        The axis along which to compute the difference.
+    """
+    return _make.delta(data, period, axis)
+
+
+def delay(data, period=1, axis=0):
+    """Computes the delay of the elements of a tensor along an axis.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    axis : int
+        The axis along which to compute the delay.
+    """
+    return _make.delay(data, period, axis)
+
+
+def ts_max(data, window=1, axis=0):
+    """Computes the max of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_max(data, window, axis)
+
+
+def ts_min(data, window=1, axis=0):
+    """Computes the min of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_min(data, window, axis)
+
+
+def ts_mean(data, window=1, axis=0):
+    """Computes the mean of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_mean(data, window, axis)
+
+
+def ts_median(data, window=1, axis=0):
+    """Computes the median of the elements of a tensor along an axis with window size.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The input tensor.
+
+    window : int
+        The size of the window to sum over.
+    """
+    return _make.ts_median(data, window, axis)

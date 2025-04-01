@@ -759,3 +759,49 @@ def cumprod(
         exclusive=exclusive,
         workspace=workspace,
     )
+
+
+def ts_sum(x, window=1, axis=0):
+    """Compute the absolute value of the elements along an axis.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        The input tensor.
+
+    axis : int
+        The axis to compute the absolute value along.
+
+    Returns
+    -------
+    ret : tvm.te.Tensor
+        The resulting tensor.
+    """
+    cumsum_tensor = cumsum(x, axis=axis)
+    if len(x.shape) == 1:
+        return te.compute(x.shape,
+                          lambda *i: te.if_then_else(
+                              i[0] < window,
+                              cumsum_tensor[i[0]],
+                              cumsum_tensor[i[0]] -
+                              cumsum_tensor[i[0] - window]
+                          ), name='ts_sum', tag=tag.ELEMWISE)
+    elif len(x.shape) == 2:
+        if axis == 0:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[axis] < window,
+                                  cumsum_tensor[i[0], i[1]],
+                                  cumsum_tensor[i[0], i[1]] -
+                                  cumsum_tensor[i[0] - window, i[1]]
+                              ), name='ts_sum', tag=tag.ELEMWISE)
+        else:
+            return te.compute(x.shape,
+                              lambda *i: te.if_then_else(
+                                  i[axis] < window,
+                                  cumsum_tensor[i[0], i[1]],
+                                  cumsum_tensor[i[0], i[1]] -
+                                  cumsum_tensor[i[0], i[1] - window]
+                              ), name='ts_sum', tag=tag.ELEMWISE)
+    else:
+        raise NotImplementedError("ts_sum only supports 1D and 2D tensors")

@@ -2124,6 +2124,7 @@ def wrap_compute_ts_sum(topi_compute):
 
     return _compute_ts_sum
 
+
 @override_native_generic_func("ts_sum_strategy")
 def ts_sum_strategy(attrs, inputs, out_type, target):
     """ts_sum generic strategy"""
@@ -2132,5 +2133,122 @@ def ts_sum_strategy(attrs, inputs, out_type, target):
         wrap_compute_ts_sum(topi.ts_sum),
         wrap_topi_schedule(topi.generic.schedule_injective),
         name="ts_sum.generic",
+    )
+    return strategy
+
+
+def wrap_compute_delta(topi_compute):
+    """wrap delta topi compute"""
+
+    def _compute_delta(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.period, attrs.axis)]
+
+    return _compute_delta
+
+
+@override_native_generic_func("delta_strategy")
+def delta_strategy(attrs, inputs, out_type, target):
+    """delta generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_delta(topi.delta),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="delta.generic",
+    )
+    return strategy
+
+
+def wrap_compute_delay(topi_compute):
+    """wrap delay topi compute"""
+
+    def _compute_delay(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.period, attrs.axis)]
+
+    return _compute_delay
+
+
+@override_native_generic_func("delay_strategy")
+def delay_strategy(attrs, inputs, out_type, target):
+    """delay generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_delta(topi.delay),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="delay.generic",
+    )
+    return strategy
+
+
+def wrap_compute_ts_max(topi_compute):
+    """wrap ts_max topi compute"""
+
+    def _compute_ts_max(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.window, attrs.axis)]
+
+    return _compute_ts_max
+
+
+@override_native_generic_func("ts_max_strategy")
+def ts_max_strategy(attrs, inputs, out_type, target):
+    """ts_max generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_max(topi.ts_max),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="ts_max.generic",
+    )
+    return strategy
+
+
+def wrap_compute_ts_min(topi_compute):
+    """wrap ts_min topi compute"""
+
+    def _compute_ts_min(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.window, attrs.axis)]
+
+    return _compute_ts_min
+
+
+@override_native_generic_func("ts_min_strategy")
+def ts_min_strategy(attrs, inputs, out_type, target):
+    """ts_min generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_min(topi.ts_min),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="ts_min.generic",
+    )
+    return strategy
+
+
+def wrap_compute_ts_mean(topi_compute):
+    """wrap ts_mean topi compute"""
+
+    def _compute_ts_mean(attrs, inputs, out_type):
+        return [topi_compute(inputs[0], attrs.window, attrs.axis)]
+
+    return _compute_ts_mean
+
+
+@override_native_generic_func("ts_mean_strategy")
+def ts_mean_strategy(attrs, inputs, out_type, target):
+    """ts_mean generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_mean(topi.ts_mean),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="ts_mean.generic",
+    )
+    return strategy
+
+
+@override_native_generic_func("ts_median_strategy")
+def ts_median_strategy(attrs, inputs, out_type, target):
+    """ts_median generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_ts_mean(topi.ts_median),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="ts_median.generic",
     )
     return strategy

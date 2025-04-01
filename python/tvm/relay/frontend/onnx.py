@@ -6543,6 +6543,53 @@ class SequenceAt(OnnxOpConverter):
         return input_sequence[position]
 
 
+class TsCommonConverter(OnnxOpConverter):
+    @classmethod
+    def _impl_v11(cls, inputs, attr, params):
+        if len(inputs) == 1:
+            input_tensor = inputs[0]
+            window = attr.get('period', 1)
+            return _op.ts_sum(input_tensor, window)
+        elif len(inputs) == 2:
+            for i in range(2):
+                if isinstance(inputs[i], (str, int)):
+                    input_tensor = inputs[1 - i]
+                    window = int(inputs[i])
+                    return _op.ts_sum(input_tensor, window)
+        else:
+            raise ValueError("TsSum only support 1 or 2 inputs")
+
+
+class TsSum(TsCommonConverter):
+    """Operator converter for ts_sum op"""
+    pass
+
+
+class TsMax(TsCommonConverter):
+    """Operator converter for ts_max op"""
+    pass
+
+
+class TsMin(TsCommonConverter):
+    """Operator converter for ts_min op"""
+    pass
+
+
+class TsMean(TsCommonConverter):
+    """Operator converter for ts_mean op"""
+    pass
+
+
+class Delta(TsCommonConverter):
+    """Operator converter for delta op"""
+    pass
+
+
+class Delay(TsCommonConverter):
+    """Operator converter for delay op"""
+    pass
+
+
 # compatible operators that do NOT require any conversion.
 _identity_list = []
 
@@ -6586,9 +6633,13 @@ def _get_convert_map(opset):
         # defs/logical
         # defs/math
         "Add": Add.get_converter(opset),
+        "add": Add.get_converter(opset),
         "Sub": Sub.get_converter(opset),
+        "substract": Sub.get_converter(opset),
         "Mul": Mul.get_converter(opset),
+        "Multi": Mul.get_converter(opset),
         "Div": Div.get_converter(opset),
+        "Divide": Div.get_converter(opset),
         "Neg": Renamer("negative"),
         "Abs": Absolute.get_converter(opset),
         "Reciprocal": Reciprocal.get_converter(opset),
@@ -6784,6 +6835,14 @@ def _get_convert_map(opset):
         "ConcatFromSequence": ConcatFromSequence.get_converter(opset),
         "SplitToSequence": SplitToSequence.get_converter(opset),
         "SequenceAt": SequenceAt.get_converter(opset),
+        "TsSum": TsSum.get_converter(opset),
+        "ts_sum": TsSum.get_converter(opset),
+        "TsMax": TsMax.get_converter(opset),
+        "TsMin": TsMin.get_converter(opset),
+        "TsMean": TsMean.get_converter(opset),
+        "Delta": Delta.get_converter(opset),
+        "Delay": Delay.get_converter(opset)
+
     }
 
 
