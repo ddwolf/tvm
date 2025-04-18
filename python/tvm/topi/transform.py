@@ -23,7 +23,7 @@ from tvm import te, topi
 from tvm.te import hybrid
 
 from . import cpp, tag
-from .utils import const_vector, make_idx, within_index
+from .utils import const_vector, get_const_int, make_idx, within_index
 
 
 def expand_dims(a, axis, num_newaxis=1):
@@ -1390,3 +1390,33 @@ def ts_median(x, window=1, axis=0):
         return te.compute(x.shape, _compute_win_even, name='ts_median', tag=topi.tag.ELEMWISE)
     else:
         return te.compute(x.shape, _compute_win_odd, name='ts_median', tag=topi.tag.ELEMWISE)
+
+def dxt_axis_abs(x, axis, indice):
+    """Take absolute value of the input of axis in x, element-wise.
+
+    Parameters
+    ----------
+    x : tvm.te.Tensor
+        Input argument.
+    axis: int
+        Input argument.
+    indice: int
+        Input argument.
+    Returns
+    -------
+    y : tvm.te.Tensor
+        The result.
+    """
+    ishape = x.shape
+    assert len(ishape) == 3
+    assert indice < get_const_int(ishape[axis])
+    assert indice >= 0
+    if axis == 0:
+        return te.compute(x.shape, lambda i,j,k: te.if_then_else(x[i,j,k] >= 0, x[i,j,k],
+                            te.if_then_else(i == indice, -x[i,j,k], x[i,j,k])))
+    elif axis == 1:
+        return te.compute(x.shape, lambda i, j, k: te.if_then_else(x[i, j, k] >= 0, x[i, j, k],
+                            te.if_then_else(j == indice, -x[i, j, k], x[i, j, k])))
+    else:
+        return te.compute(x.shape, lambda i, j, k: te.if_then_else(x[i, j, k] >= 0, x[i, j, k],
+                            te.if_then_else(k == indice, -x[i, j, k], x[i, j, k])))

@@ -2208,3 +2208,18 @@ def ts_median(data, window=1, axis=0):
         The size of the window to sum over.
     """
     return _make.ts_median(data, window, axis)
+
+def dxt_axis_abs(data, axis=0, indice=0):
+    """Computes abs of data along a certain axis indice.
+
+    Parameters
+    ----------
+    data : relay.Expr
+        The source data to be invert permuated.
+
+    Returns
+    -------
+    ret : relay.Expr
+        Invert permuated data. Has the same type as data.
+    """
+    return _make.dxt_axis_abs(data, axis, indice)

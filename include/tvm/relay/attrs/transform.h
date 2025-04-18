@@ -636,6 +636,17 @@ struct PeriodMoveAxisAttrs: public tvm::AttrsNode<PeriodMoveAxisAttrs> {
 }
 };  // struct PeriodMoveAxisAttrs
 
+/*! \brief Attributes used in axisabs operator */
+struct DXTAxisAbsAttrs : public tvm::AttrsNode<DXTAxisAbsAttrs> {
+    int axis;
+    int indice;
+
+    TVM_DECLARE_ATTRS(DXTAxisAbsAttrs, "relay.attrs.DXTAxisAbsAttrs") {
+        TVM_ATTR_FIELD(axis).set_default(0).describe("Axis to abs");
+        TVM_ATTR_FIELD(indice).set_default(0).describe("Indice to abs");
+    }
+};
+
 }  // namespace relay
 }  // namespace tvm
 #endif  // TVM_RELAY_ATTRS_TRANSFORM_H_

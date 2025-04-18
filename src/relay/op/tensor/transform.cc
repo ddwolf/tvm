@@ -4473,6 +4473,16 @@ Expr MakeAxisAbs(Expr data, int axis) {
 TVM_REGISTER_GLOBAL("relay.op._make.axis_abs")
     .set_body_typed(MakeAxisAbs);
 
+Expr MakeDXTAxisAbs(Expr data, int axis, int indice) {
+    auto attrs = make_object<DXTAxisAbsAttrs>();
+    attrs->axis = axis;
+    attrs->indice = indice;
+    static const Op& op = Op::Get("dxt_axis_abs");
+    return Call(op, {data}, Attrs(attrs), {}); // 会创建一个CallNode实例
+}
+
+TVM_REGISTER_GLOBAL("relay.op._make.dxt_axis_abs").set_body_typed(MakeDXTAxisAbs);
+
 // Array<te::Tensor> TsSumCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
 //             const Type& out_type) {
 //     const TsCommonAttrs* param = attrs.as<TsCommonAttrs>();
@@ -4622,5 +4632,41 @@ Expr MakeTsMedian(Expr data, int window, int axis) {
 TVM_REGISTER_GLOBAL("relay.op._make.ts_median")
     .set_body_typed(MakeTsMedian);
 
+bool DXTAxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+               const TypeReporter& reporter) {
+    // types: [data, output]
+    ICHECK_EQ(types.size(), 2);
+    const auto* data = types[0].as<TensorTypeNode>();
+    if (data == nullptr) {
+      ICHECK(types[0].as<IncompleteTypeNode>())
+          << "cast: expect input type to be TensorType but get " << types[0];
+      return false;
+    }
+    const auto* param = attrs.as<DXTAxisAbsAttrs>();
+    const int ndim = static_cast<int>(data->shape.size());
+    const int axis = param->axis;
+    const int axis_len = data->shape[axis].as<IntImmNode>()->value;
+    const int indice = param->indice;
+
+    ICHECK(0 <= axis && axis < ndim)
+      << "axis_abs only accepts `axis` in [0, data.ndim - 1]"
+      << ", but got axis = " << axis << ", and data.ndim = " << ndim;
+
+    ICHECK(0 <= indice && indice < axis_len)
+      << "axis_abs only accepts `indice` in [0, data[axis] - 1"
+      << ", but got indice = " << indice << ", and data[axis] = " << axis_len;
+
+    reporter->Assign(types[1], TensorType(data->shape, data->dtype));
+    return true;
+}
+
+RELAY_REGISTER_OP("dxt_axis_abs")
+    .describe(R"doc(Computes the axis abs of a tensor.)doc" TVM_ADD_FILELINE)
+    .set_num_inputs(1)
+    .add_argument("data", "Tensor", "The input tensor")
+    .set_support_level(3)
+    .add_type_rel("dxt_axis_abs", DXTAxisAbsRel)
+    .set_attr<TOpPattern>("TOpPattern", kOpaque);
+TVM_REGISTER_NODE_TYPE(DXTAxisAbsAttrs);
 }  // namespace relay
 }  // namespace tvm

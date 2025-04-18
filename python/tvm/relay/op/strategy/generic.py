@@ -2252,3 +2252,22 @@ def ts_median_strategy(attrs, inputs, out_type, target):
         name="ts_median.generic",
     )
     return strategy
+
+def wrap_compute_dxt_axis_abs(topi_compute):
+    """Wrap axis_abs topi compute"""
+
+    def _compute_dxt_axis_abs(attrs, inputs, _):
+        return [topi_compute(inputs[0], attrs.axis, attrs.indice)]
+
+    return _compute_dxt_axis_abs
+
+@override_native_generic_func("dxt_axis_abs_strategy")
+def dxt_axis_abs_strategy(attrs, inputs, out_type, target):
+    """axis_abs generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_dxt_axis_abs(topi.dxt_axis_abs),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="dxt_axix_abs.generic",
+    )
+    return strategy
