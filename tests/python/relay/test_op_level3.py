@@ -2350,8 +2350,8 @@ class TestDXTAxisAbs:
         assert yy.checked_type == relay.TensorType(dshape, "int32")  # 类型测试
 
         data = np.full(dshape, -1).astype("int32")
-        op_res = create_executor().evaluate(y, {x: relay.const(data)})  # 创建执行器并执行算子推理
         import pdb; pdb.set_trace()
+        op_res = create_executor().evaluate(y, {x: relay.const(data)})  # 创建执行器并执行算子推理
         if axis == 0:
             data[indice,:,:] = np.abs(data[indice,:,:])
         elif axis == 1:
