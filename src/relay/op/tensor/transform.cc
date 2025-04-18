@@ -4417,6 +4417,57 @@ Expr MakeFixedPointMultiplyPerAxis(Expr x, Expr m, Expr lshift, Expr rshift,
   return Call(op, {x, m, lshift, rshift}, Attrs(attrs), {});
 }
 
+TVM_REGISTER_NODE_TYPE(AxisAbsAttrs);
+
+bool AxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+                const TypeReporter& reporter) {
+  // types: [data, output]
+  ICHECK_EQ(types.size(), 2);
+  const auto* data = types[0].as<TensorTypeNode>();
+  LOG(INFO) << "DXT: 1" ;
+  if (data == nullptr) {
+    LOG(INFO) << "DXT: 2" ;
+    ICHECK(types[0].as<IncompleteTypeNode>())
+        << "cast: expect input type to be TensorType but get " << types[0];
+    return false;
+  }
+  LOG(INFO) << "DXT: 3" ;
+
+  const auto* param = attrs.as<AxisAbsAttrs>();
+  const int ndim = static_cast<int>(data->shape.size());
+  const int axis = param->axis;
+  const int axis_len = data->shape[axis].as<IntImmNode>()->value;
+  const int indice = param->indice;
+  LOG(INFO) << "DXT: 4" ;
+  ICHECK(0 <= axis && axis < ndim) << "axis_abs only accepts `axis` in [0, data.ndim - 1]"
+                                   << ", but got axis = " << axis << ", and data.ndim = " << ndim;
+
+  ICHECK(0 <= indice && indice < axis_len)
+      << "axis_abs only accepts `indice` in [0, data[axis] - 1"
+      << ", but got indice = " << indice << ", and data[axis] = " << axis_len;
+  LOG(INFO) << "DXT: 5" ;
+  reporter->Assign(types[1], TensorType(data->shape, data->dtype));
+  return true;
+}
+
+RELAY_REGISTER_OP("axis_abs")
+    .describe(R"doc(Computes the axis abs of a tensor.)doc" TVM_ADD_FILELINE)
+    .set_num_inputs(1)
+    .add_argument("data", "Tensor", "The input tensor")
+    .set_support_level(3)
+    .add_type_rel("axis_abs", AxisAbsRel)
+    .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+Expr MakeAxisAbs(Expr data, int axis, int indice) {
+    auto attrs = make_object<AxisAbsAttrs>();
+    attrs->axis = axis;
+    attrs->indice = indice;
+    static const Op& op = Op::Get("axis_abs");
+    return Call(op, {data}, Attrs(attrs), {}); // 会创建一个CallNode实例
+}
+
+TVM_REGISTER_GLOBAL("relay.op._make.axis_abs").set_body_typed(MakeAxisAbs);
+
 TVM_REGISTER_GLOBAL("relay.op._make.fixed_point_multiply_per_axis")
     .set_body_typed(MakeFixedPointMultiplyPerAxis);
 

@@ -2095,3 +2095,22 @@ def wrap_compute_layout_transform(topi_compute, schedule_rule="None"):
         return [topi_compute(inputs[0], attrs.src_layout, attrs.dst_layout, schedule_rule)]
 
     return _compute_layout_transform
+
+def wrap_compute_axis_abs(topi_compute):
+    """Wrap axis_abs topi compute"""
+
+    def _compute_axis_abs(attrs, inputs, _):
+        return [topi_compute(inputs[0], attrs.axis, attrs.indice)]
+
+    return _compute_axis_abs
+
+@override_native_generic_func("axis_abs_strategy")
+def axis_abs_strategy(attrs, inputs, out_type, target):
+    """axis_abs generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        wrap_compute_axis_abs(topi.axis_abs),
+        wrap_topi_schedule(topi.generic.schedule_injective),
+        name="axix_abs.generic",
+    )
+    return strategy
