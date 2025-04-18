@@ -14,17 +14,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# pylint: disable=wildcard-import
-"""Contrib modules."""
-from .register import get_pattern_table, register_pattern_table
 
-from .arm_compute_lib import *
-from .dnnl import *
-from .bnns import *
-from .coreml import *
-from .libtorch import *
-from .tensorrt import *
-from .cutlass import *
-from .clml import *
-from .mrvl import *
-from .dxtc import *
+if((USE_DXTC STREQUAL "ON"))
+  tvm_file_glob(GLOB DNNL_CONTRIB_SRC src/relay/backend/contrib/dxtc/*.cc)
+  list(APPEND COMPILER_SRCS ${DNNL_CONTRIB_SRC})
+
+  message(STATUS "Build with DXTC compiler")
+else()
+  message(FATAL_ERROR "Invalid option: USE_DXTC=" ${USE_DXTC})
+endif()
