@@ -16,8 +16,8 @@
 # under the License.
 
 if((USE_DXTC STREQUAL "ON"))
-  tvm_file_glob(GLOB DNNL_CONTRIB_SRC src/relay/backend/contrib/dxtc/*.cc)
-  list(APPEND COMPILER_SRCS ${DNNL_CONTRIB_SRC})
+  tvm_file_glob(GLOB CUSTOM_CONTRIB_SRC src/relay/backend/contrib/dxtc/*.cc)
+  list(APPEND COMPILER_SRCS ${CUSTOM_CONTRIB_SRC})
 
   message(STATUS "Build with DXTC compiler")
 else()

@@ -1394,9 +1394,4 @@ def compute_ts_median(attrs, inputs, output_type):
 _reg.register_strategy("ts_median", strategy.ts_median_strategy)
 _reg.register_shape_func("ts_median", False, elemwise_shape_func)
 
-
-@_reg.register_compute("dxt_axis_abs")  # 设置算子的计算函数属性，默认的level为10
-def compute_axis_abs(attrs, inputs, output_type):
-    """Compute definition of axis_abs"""
-    return topi.dxt_axis_abs(inputs[0], attrs.axis, attrs.indice)
 _reg.register_strategy("dxt_axis_abs", strategy.dxt_axis_abs_strategy)
