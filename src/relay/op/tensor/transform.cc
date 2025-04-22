@@ -4666,7 +4666,8 @@ RELAY_REGISTER_OP("dxt_axis_abs")
     .add_argument("data", "Tensor", "The input tensor")
     .set_support_level(3)
     .add_type_rel("dxt_axis_abs", DXTAxisAbsRel)
-    .set_attr<TOpPattern>("TOpPattern", kOpaque);
+    .set_attr<TOpPattern>("TOpPattern", kOpaque)
+    .set_attr<FTVMStrategy>("FTVMStrategy", topi.generic.schedule_injective);
 TVM_REGISTER_NODE_TYPE(DXTAxisAbsAttrs);
 }  // namespace relay
 }  // namespace tvm

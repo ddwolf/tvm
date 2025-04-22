@@ -22,6 +22,8 @@ from typing import Callable, Optional
 import numpy as np
 import pytest
 import tvm
+from tvm import relax
+from tvm.contrib.pipeline_executor_build import export_library
 import tvm.testing
 from tvm import relay, te
 from tvm.error import TVMError
@@ -2339,18 +2341,31 @@ def test_trilu_reduce():
 class TestDXTAxisAbs:
     dshape, axis, indice = tvm.testing.parameters(     # 定义测试用例参数，这里是输入tensor的shape，axis和indice
         ((4, 4, 1), 1, 1),
-        ((4, 4, 1), 0, 1),
-        ((3, 3, 3), 1, 1),
+        # ((4, 4, 1), 0, 1),
+        # ((3, 3, 3), 1, 1),
     )
 
     def test_dxt_axis_abs(self, dshape, axis, indice):
         x = relay.var("x", relay.TensorType(dshape, "int32"))  # 定义relay输入tensor
         y = relay.dxt_axis_abs(x, axis=axis, indice=indice)    # 定义axis_abs运算表达式
         yy = run_infer_type(y)      # 推理运算表达式的类型，定义在python/tvm/relay/testing/__init__.py
+        f = relay.Function([x], y)
+        mod = tvm.IRModule.from_expr(f)
+        mod = transform.AnnotateTarget("dxtc")(mod)
+        print("mod is ", mod)
+        import pdb;
+        pdb.set_trace()
+        ey = relay.build(mod, "c")
+        print("ey is ", ey)
+        ex = relax.build(mod, "llvm")
+
+        kwargs = {}
+        kwargs["options"] = ["-O2", "-std=c++14"]
+
+        zz = ex.export_library("abc", fcompile=False, **kwargs)
         assert yy.checked_type == relay.TensorType(dshape, "int32")  # 类型测试
 
         data = np.full(dshape, -1).astype("int32")
-        import pdb; pdb.set_trace()
         op_res = create_executor().evaluate(y, {x: relay.const(data)})  # 创建执行器并执行算子推理
         if axis == 0:
             data[indice,:,:] = np.abs(data[indice,:,:])

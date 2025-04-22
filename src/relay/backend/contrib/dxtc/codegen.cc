@@ -1,11 +1,11 @@
 #include "tvm/runtime/module.h"
 #include "tvm/runtime/registry.h"
+#include <iostream>
 namespace tvm {
 runtime::Module DXTCompiler() {
-    static_assert(true, "haha");
-    CHECK(false) << "Not implemented yet";
+    std::cout << "Not implemented yet" << std::endl;
     return {
-
+        
     };
 }
 

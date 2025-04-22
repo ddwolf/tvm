@@ -1,6 +1,7 @@
 import tvm
 from tvm import relax
 from tvm.relax.frontend import nn
+from tvm import relay
 
 
 class MLPModel(nn.Module):
@@ -9,11 +10,14 @@ class MLPModel(nn.Module):
         self.fc1 = nn.Linear(784, 256)
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(256, 10)
+        self.dxt = relay.op.get("dxt_axis_abs")
 
     def forward(self, x):
         x = self.fc1(x)
         x = self.relu1(x)
         x = self.fc2(x)
+        x = x.reshape(1, 10, -1)
+        x = self.dxt(x, 0, 0)
         return x
 
 mod, param_spec = MLPModel().export_tvm(

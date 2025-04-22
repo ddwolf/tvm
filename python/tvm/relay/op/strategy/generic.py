@@ -2271,3 +2271,51 @@ def dxt_axis_abs_strategy(attrs, inputs, out_type, target):
         name="dxt_axix_abs.generic",
     )
     return strategy
+
+@override_native_generic_func("compliler_begin_strategy")
+def compiler_begin_strategy(attrs, inputs, out_type, target):
+    from tvm.te import create_prim_func
+    from tvm.te import placeholder
+    from tvm.te import schedule
+    from tvm.te import create_schedule
+    from tvm.relay.op import OpStrategy
+
+    # 添加一个空实现以避免编译器报错
+    def compute_placeholder(attrs, inputs, out_type):
+        return [inputs[0]]
+
+    def schedule_placeholder(attrs, outs, target):
+        return create_schedule([x.op for x in outs])
+
+    strategy = OpStrategy()
+    strategy.add_implementation(
+        compute_placeholder,
+        schedule_placeholder,
+        name="dummy_compiler_begin",
+        plevel=1
+    )
+    return strategy
+
+@override_native_generic_func("compliler_end_strategy")
+def compiler_end_strategy(attrs, inputs, out_type, target):
+    from tvm.te import create_prim_func
+    from tvm.te import placeholder
+    from tvm.te import schedule
+    from tvm.te import create_schedule
+    from tvm.relay.op import OpStrategy
+
+    # 添加一个空实现以避免编译器报错
+    def compute_placeholder(attrs, inputs, out_type):
+        return [inputs[0]]
+
+    def schedule_placeholder(attrs, outs, target):
+        return create_schedule([x.op for x in outs])
+
+    strategy = OpStrategy()
+    strategy.add_implementation(
+        compute_placeholder,
+        schedule_placeholder,
+        name="dummy_compiler_begin",
+        plevel=1
+    )
+    return strategy

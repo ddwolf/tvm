@@ -332,12 +332,15 @@ tvm_file_glob(GLOB CODEGEN_SRCS
   src/target/*.cc
   src/target/source/*.cc
   src/target/parsers/*.cc
+  src/target/codegen/*.cc
+  src/target/codegen/custom/*.cc
     )
 
 list(APPEND COMPILER_SRCS ${CODEGEN_SRCS})
 
 tvm_file_glob(GLOB_RECURSE RELAY_OP_SRCS
     src/relay/op/*.cc
+    src/relay/op/custom/*.cc
     )
 tvm_file_glob(GLOB_RECURSE RELAY_PASS_SRCS
     src/relay/analysis/*.cc
