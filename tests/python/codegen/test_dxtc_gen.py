@@ -15,6 +15,13 @@ func = relay.Function([x], y)
 # 设置目标为自定义代码生成器
 target = tvm.target.Target("custom", host="llvm")
 
+# with tvm.transform.PassContext(opt_level=3) as ctx:
+#     graph_json, lib, params = relay.build_module.build(func, target="llvm", mod_name="main")
+# print("graph json", graph_json, "lib", lib, "params", params)
+
+# lowered = relay.build_module._build_for_device(func, target="llvm")
+# print(lowered["main"])
+print("=" * 80)
 # 构建
 with tvm.transform.PassContext(opt_level=3):
     lib = relay.build(func, target=target, params=None)
