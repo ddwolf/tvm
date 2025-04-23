@@ -25,10 +25,26 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
     const auto &signature = op->func_type_annotation();
     os_ << "// Signature: " << signature << "\n";
     os_ << "#include <stdio.h>\n";
-    os_ << " extern \"C\" int " << strname << "(void *data, int *shape, int ndim, void *env, int *strides, void *output) {\n"
-        << "  printf(\"data=%p, shape=%p, ndim=%d, env=%p, strides=%p, output=%p\\n\", data, shape, ndim, env, strides, output); \n"
+    os_ << "#include <tvm/te/tensor.h>\n";
+    os_ << "/** see C_backend_api.h#TVMBackendPackedCFunc\n"
+        << " * \\param TVMValue *args The arguments\n"
+        << " * \\param int *type_codes The type codes of the arguments\n"
+        << " * \\param int num_args Number of arguments\n"
+        << " * \\param TVMValue *out_ret_value The output value of the return value\n"
+        << " * \\param int *out_ret_tcode The output type code of the return value\n"
+        << " * \\param void *resource_handle Pointer to associated resource\n"
+        << " */"
+        << " extern \"C\" int " << strname << "(\n"
+        << "        void *args,\n" 
+        << "        int *type_codes,\n"
+        << "        int num_args,\n"
+        << "        void *out_ret_value,\n"
+        << "        int *out_ret_tcode,\n"
+        << "        void *resource_handle) {\n"
+        << "  printf(\"args=%p, type_codes=%p, num_args=%d, out_ret_value=%p, out_ret_tcode=%p, resource_handle=%p\",\n"
+        << "         args, type_codes, num_args, out_ret_value, out_ret_tcode, resource_handle); \n"
         << "  for (int i = 0; i < 27; ++i) {\n"
-        << "    ((int*)output)[i] = -(*((int*)data + i));\n"
+        << "    //((int*)output)[i] = -(*((int*)data + i));\n"
         << "  }\n"
         << "  return 0;\n"
         << "}\n";
