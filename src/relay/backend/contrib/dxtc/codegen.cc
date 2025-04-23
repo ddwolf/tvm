@@ -25,12 +25,13 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
     const auto &signature = op->func_type_annotation();
     os_ << "// Signature: " << signature << "\n";
     os_ << "#include <stdio.h>\n";
-      os_ << "int " << strname << "(void *data, int *shape, int ndim, void *env, int *strides, void *output) {\n"
-          << "  printf(\"data=%p, shape=%p, ndim=%p, env=%p, strides=%p, output=%p\\n\"); \n"
-            << "  for (int i = 0; i < size; ++i) {\n"
-            << "    output[i] = input1[i] * param2 + input2[i] * param1;\n"
-            << "  }\n"
-            << "}\n";
+    os_ << " extern \"C\" int " << strname << "(void *data, int *shape, int ndim, void *env, int *strides, void *output) {\n"
+        << "  printf(\"data=%p, shape=%p, ndim=%d, env=%p, strides=%p, output=%p\\n\", data, shape, ndim, env, strides, output); \n"
+        << "  for (int i = 0; i < 27; ++i) {\n"
+        << "    ((int*)output)[i] = -(*((int*)data + i));\n"
+        << "  }\n"
+        << "  return 0;\n"
+        << "}\n";
     //VisitStmt(func->body);
   }
 
