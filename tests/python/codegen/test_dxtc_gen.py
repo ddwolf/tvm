@@ -52,6 +52,7 @@ lib = update_lib(lib)
 ##############################################################################################################
 
 data = np.full(dshape, -1).astype("int32")
+print("data is ", data)
 device = tvm.cpu(0)
 # executor = tvm.contrib.graph_executor.GraphModule(lib["default"](device))
 try:
