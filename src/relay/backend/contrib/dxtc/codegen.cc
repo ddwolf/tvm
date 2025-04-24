@@ -26,7 +26,9 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
     os_ << "// Signature: " << signature << "\n";
     os_ << "#include <stdio.h>\n";
     os_ << "#include <tvm/te/tensor.h>\n";
-    os_ << "/** see C_backend_api.h#TVMBackendPackedCFunc\n"
+    os_ << "// global state\n"
+        << "int g_state[27] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};"
+        << "/** see C_backend_api.h#TVMBackendPackedCFunc\n"
         << " * \\param TVMValue *args The arguments\n"
         << " * \\param int *type_codes The type codes of the arguments\n"
         << " * \\param int num_args Number of arguments\n"
@@ -49,9 +51,6 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
         << "    printf(\"codegen: data=%p, data->data=%p, data->ndim=%d\\n\", data, data->data, data->ndim);\n"
         << "    int *outdata = (int*)data->data;\n"
         << "    printf(\"codegen: outdata=%p, outdata[0]=%d, ndim=%d\\n\", outdata, outdata[0], data->ndim);\n"
-        << "    for (int i = 0; i < 27; ++i) {\n"
-        << "      printf(\"codegen: data:[%d]=%d\\n\", i, outdata[i]);\n"
-        << "    }\n"
         << "    for (int m = 0; m < data->ndim; ++m) {\n"
         << "      printf(\"codegen: - shape[%d]=%d\\n\", m, data->shape[m]);\n"
         << "    }\n"
@@ -60,10 +59,12 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
         << "  int *outdata = (int*)output->data;\n"
         << "  DLTensor *input = (DLTensor*)(((TVMValue*)args)[0].v_handle);\n"
         << "  int *inputdata = (int*)input->data;\n"
+        << "  printf(\" ============ inputdata[0]=%d, g_state[0]=%d->\", inputdata[0], g_state[0]);\n"
         << "  for (int i = 0; i < 27; ++i) {\n"
-        << "    printf(\"codegen: data:[%d]=%d\\n\", i, outdata[i]);\n"
-        << "    outdata[i] = -inputdata[i];\n"
+        << "    outdata[i] = -inputdata[i] * (g_state[i]-3);\n"
+        << "    g_state[i] += outdata[i];\n"
         << "  }\n"
+        << "  printf(\"%d\\n\", g_state[0]);\n"
         << "  return 0;\n"
         << "}\n";
     //VisitStmt(func->body);

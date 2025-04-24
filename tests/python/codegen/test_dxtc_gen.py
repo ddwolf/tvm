@@ -15,9 +15,10 @@ indice = 1
 # 创建自定义算子调用
 x = relay.var("x", relay.TensorType(dshape, "int32"))  # 定义relay输入tensor
 y = relay.dxt_axis_abs(x, axis=1, indice=1)    # 定义axis_abs运算表达式
+m = relay.dxt_axis_abs(y, axis=1,  indice=1)
 
 # 构建函数
-func = relay.Function([x], y)
+func = relay.Function([x], m)
 mod = tvm.IRModule({"main": func})
 print("mod is ", mod)
 
@@ -51,8 +52,7 @@ lib = update_lib(lib)
 # print("ret is ", ret)
 ##############################################################################################################
 
-data = np.full(dshape, -1).astype("int32")
-print("data is ", data)
+
 device = tvm.cpu(0)
 # executor = tvm.contrib.graph_executor.GraphModule(lib["default"](device))
 try:
@@ -69,7 +69,8 @@ except Exception as e:
 
 executor = tvm.contrib.graph_executor.GraphModule(aaa(device))
 
-x_data = np.full(dshape, -1).astype("int32")
+x_data = np.full(dshape, 11).astype("int32")
+print("x_data=", x_data)
 i_data = tvm.nd.array(x_data)
 
 executor.set_input("x", i_data)
