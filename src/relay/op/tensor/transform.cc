@@ -4486,8 +4486,14 @@ Expr MakeMyTsMean(Expr data, Expr window) {
     return Call(op, {data, window}, Attrs(), {}); // 会创建一个CallNode实例
 }
 
+Expr MakeMyMulti(Expr op1, Expr op2) {
+    static const Op& op = Op::Get("my_multi");
+    return Call(op, {op1, op2}, Attrs(), {}); // 会创建一个CallNode实例
+}
+
 TVM_REGISTER_GLOBAL("relay.op._make.dxt_axis_abs").set_body_typed(MakeDXTAxisAbs);
 TVM_REGISTER_GLOBAL("relay.op._make.my_ts_mean").set_body_typed(MakeMyTsMean);
+TVM_REGISTER_GLOBAL("relay.op._make.my_multi").set_body_typed(MakeMyMulti);
 
 // Array<te::Tensor> TsSumCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
 //             const Type& out_type) {
@@ -4646,7 +4652,22 @@ bool MyTsMeanRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
     }
     //std::cout << "data->dtype: " << data->dtype << std::endl;
     Type scalar_type = TensorType({}, data->dtype);  // 表示一个标量 int32/float32
-    reporter->Assign(types[2], TupleType({TensorType(data->shape, data->dtype), scalar_type}));
+    reporter->Assign(types[2], types[0]);
+    // for (int i = 0; i < types.size(); i++) {
+    // LOG(INFO) << "type " << i << " is " << types[i] << std::endl;
+    // }
+    return true;
+}
+bool MyMultiRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+               const TypeReporter& reporter) {
+    const auto* op1 = types[0].as<TensorTypeNode>();
+    const auto* op2 = types[1].as<TensorTypeNode>();
+    if (op1->shape.size() != 1 || op2->shape.size() != 1) {
+      std::cout << "only one dim tensor is supported" << std::endl;
+      return false;
+    }
+    Type scalar_type = TensorType({}, op1->dtype);
+    reporter->Assign(types[2],  types[0]);
     return true;
 }
 bool DXTAxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
@@ -4692,6 +4713,16 @@ RELAY_REGISTER_OP("my_ts_mean")
     .set_support_level(3)
     .add_type_rel("my_ts_mean", MyTsMeanRel)
     .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
+RELAY_REGISTER_OP("my_multi")
+    .describe(R"doc(Computes the product of two tensors.)doc" TVM_ADD_FILELINE)
+    .set_num_inputs(2)
+    .add_argument("op1", "Tensor", "The input tensor")
+    .add_argument("op2", "Tensor", "The input tensor")
+    .set_support_level(3)
+    .add_type_rel("my_multi", MyMultiRel)
+    .set_attr<TOpPattern>("TOpPattern", kOpaque);
+
 TVM_REGISTER_NODE_TYPE(DXTAxisAbsAttrs);
 }  // namespace relay
 }  // namespace tvm

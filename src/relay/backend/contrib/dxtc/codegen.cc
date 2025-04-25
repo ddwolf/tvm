@@ -30,11 +30,71 @@ class PrimFuncCodeGen : public tvm::tir::StmtVisitor {
       GenerateCodeAxisAbs(func, fnname);
     } else if (fnname.find("my_ts_mean") != std::string::npos) {
       GenerateCodeTsMean(func, fnname);
+    } else if (fnname.find("my_multi") != std::string::npos) {
+      GenerateCodeMulti(func, fnname);
     } else {
       LOG(FATAL) << "Unsupported function: " << fnname;
     }
   }
+  void GenerateCodeMulti(const tvm::tir::PrimFunc& func, const std::string& fnname) {
+    os_ << "// CodeGen for function: " << fnname << "\n";
+    const auto *op = func.operator->();
+    const auto &signature = op->func_type_annotation();
+    os_ << "// Signature: " << signature << "\n";
+    os_ << R"CPP(
+#include <iostream>
+#include <cmath>
+#include <cassert>
+#include <dlpack/dlpack.h>
+#include <tvm/runtime/c_runtime_api.h>
+using namespace std;
+/**
+ * \param TVMValue *args The arguments
+ * \param int *type_codes The type codes of the arguments
+ * \param int num_args Number of arguments
+ * \param TVMValue *out_ret_value The output value of the return value
+ * \param int *out_ret_tcode The output type code of the return value
+ * \param void *resource_handle Pointer to associated resource
+ */
+)CPP";
+    os_ << "extern \"C\" int " << fnname << "(\n";
+    os_ << R"CPP(
+        void *args,
+        int *type_codes,
+        int num_args,
+        void *out_ret_value,
+        int *out_ret_tcode,
+        void *resource_handle) {
 
+    DLTensor *op1 = (DLTensor*)(((TVMValue*)args)[0].v_handle);
+    float *op1data = (float*)op1->data;
+    DLTensor *op2 = (DLTensor*)(((TVMValue*)args)[1].v_handle);
+    assert(op2->ndim == op1->ndim);
+    assert(op2->ndim == 1);
+    float *op2data = (float*)op2->data;
+    DLTensor *output = (DLTensor*)(((TVMValue*)args)[2].v_handle);
+    float *outdata = (float*)output->data;
+    const int datalen = op1->shape[0];
+    assert(datalen > 0);
+    for (int i = 0; i < datalen; ++i) {
+      outdata[i] = op1data[i] * op2data[i];
+    }
+    printf("args=%p, type_codes=%p, num_args=%d, out_ret_value=%p, out_ret_tcode=%p, resource_handle=%p\n",
+           args, type_codes, num_args, out_ret_value, out_ret_tcode, resource_handle);
+  for (int n = 0; n < num_args; ++n) {
+    printf("codegen: === type[%d]=%d, args[%d]=%p\n", n, type_codes[n], n, &((TVMValue*)args)[n]);
+    DLTensor *data = (DLTensor*)(((TVMValue*)args)[n].v_handle);
+    printf("codegen: data=%p, data->data=%p, data->ndim=%d\n", data, data->data, data->ndim);
+    float *outdata = (float*)data->data;
+    printf("codegen: outdata=%p, outdata[0]=%f, ndim=%d\n", outdata, outdata[0], data->ndim);
+    for (int m = 0; m < data->ndim; ++m) {
+      printf("codegen: - shape[%d]=%ld\n", m, data->shape[m]);
+    }
+  }
+  return 0;
+}
+        )CPP";
+  }
   void GenerateCodeTsMean(const tvm::tir::PrimFunc& func, const std::string& fnname) {
   os_ << "// CodeGen for function: " << fnname << "\n";
     const auto *op = func.operator->();
@@ -110,6 +170,9 @@ T getSum() const {
 bool inited() const {
   return data != nullptr;
 }
+void dump() const {
+  printf("MEAN_OBJ: sum=%f, window=%d, step=%d, index=%d, nan_count=%d", sum, window, step, index, nan_count);
+}
 private:
   T sum;
   int window;
@@ -143,6 +206,7 @@ private:
     assert(window->ndim == 1);
     int *windowdata = (int*)window->data;
     int window_size = windowdata[0];
+    printf("tsmean: window: %d\n", window_size);
     assert(window_size > 0);
     DLTensor *output = (DLTensor*)(((TVMValue*)args)[2].v_handle);
     float *outdata = (float*)output->data;
@@ -166,11 +230,12 @@ private:
         << "      printf(\"codegen: - shape[%d]=%d\\n\", m, data->shape[m]);\n"
         << "    }\n"
         << "  }\n"
-        << "  printf(\" ============ inputdata[0]=%f, g_ts_mean_state[0]=%f->\", inputdata[0], g_ts_mean_state[0].getSum());\n"
         << "  for (int i = 0; i < data->shape[0]; ++i) {\n"
         << "    outdata[i] = g_ts_mean_state[i].calculate(inputdata[i]);\n"
         << "  }\n"
-        << "  printf(\"%f\\n\", g_ts_mean_state[0].getSum());\n"
+        << "    printf(\"tsmean: \");\n"
+        << "    g_ts_mean_state[0].dump();\n"
+        << "    printf(\"\\n\");"
         << "  return 0;\n"
         << "}\n";
   }
@@ -204,7 +269,6 @@ public:
       nan_count++;
     } else{       sum = sum + new_value;
     }
-    step++;
     if (std::isnan(data[index])) {
       nan_count--;
     } else {
@@ -225,7 +289,6 @@ T expanding(const T &new_value) {
     {
         sum = sum + new_value;
     }
-    step++;
     data[index] = new_value;
     index = (index + 1) % window;
     if(step < window) return std::nan("");
@@ -238,7 +301,8 @@ T expanding(const T &new_value) {
 }
 
 T calculate(const T &new_value) {
-  if (step < window) {
+  step++;
+  if (step <= window) {
     return expanding(new_value);
   } else {
     return rolling(new_value);
@@ -304,11 +368,10 @@ TS_MEAN_CY<float> g_ts_mean_state[1000];/** see C_backend_api.h#TVMBackendPacked
       printf("codegen: - shape[%d]=%ld\n", m, data->shape[m]);
     }
   }
-  printf(" ============ inputdata[0]=%f, g_state[0]=%f->", inputdata[0], g_ts_mean_state[0].getSum());
   for (int i = 0; i < data->shape[0]; ++i) {
     outdata[i] = g_ts_mean_state[i].calculate(inputdata[i]);
+    printf("tsmean: %d: (%f)->%f\n", i, inputdata[i], outdata[i]);
   }
-  printf("%f\n", g_ts_mean_state[0].getSum());
   return 0;
 }
         )CPP";

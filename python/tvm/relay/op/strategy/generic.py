@@ -2257,6 +2257,8 @@ def empty_compute(attrs, inputs, out_type):
     """空的 compute 函数，只返回输入张量"""
     return inputs
 
+def compty_compute_2param(attrs, inputs, out_type):
+    return [inputs[0]]
 
 def empty_schedule(attrs, outs, target):
     """空的 schedule 函数"""
@@ -2278,8 +2280,18 @@ def my_ts_mean_strategy(attrs, inputs, out_type, target):
     """axis_abs generic strategy"""
     strategy = _op.OpStrategy()
     strategy.add_implementation(
-        empty_compute,
+        compty_compute_2param,
         empty_schedule,
         name="my_ts_mean.generic",
+    )
+    return strategy
+
+@override_native_generic_func("my_multi_strategy")
+def my_multi_strategy(attrs, inputs, out_type, target):
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        compty_compute_2param,
+        empty_schedule,
+        name="my_multi.generic",
     )
     return strategy

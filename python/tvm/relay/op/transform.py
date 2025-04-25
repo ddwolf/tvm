@@ -2226,3 +2226,6 @@ def dxt_axis_abs(data, axis=0, indice=0):
 
 def my_ts_mean(data, window):
     return _make.my_ts_mean(data, window)
+
+def my_multi(op1, op2):
+    return _make.my_multi(op1, op2)
