@@ -1395,3 +1395,4 @@ _reg.register_strategy("ts_median", strategy.ts_median_strategy)
 _reg.register_shape_func("ts_median", False, elemwise_shape_func)
 
 _reg.register_strategy("dxt_axis_abs", strategy.dxt_axis_abs_strategy)
+_reg.register_strategy("my_ts_mean", strategy.my_ts_mean_strategy)

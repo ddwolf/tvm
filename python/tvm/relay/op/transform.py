@@ -2223,3 +2223,6 @@ def dxt_axis_abs(data, axis=0, indice=0):
         Invert permuated data. Has the same type as data.
     """
     return _make.dxt_axis_abs(data, axis, indice)
+
+def my_ts_mean(data, window):
+    return _make.my_ts_mean(data, window)

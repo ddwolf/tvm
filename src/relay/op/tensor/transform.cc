@@ -4481,7 +4481,13 @@ Expr MakeDXTAxisAbs(Expr data, int axis, int indice) {
     return Call(op, {data}, Attrs(attrs), {}); // 会创建一个CallNode实例
 }
 
+Expr MakeMyTsMean(Expr data, Expr window) {
+    static const Op& op = Op::Get("my_ts_mean");
+    return Call(op, {data, window}, Attrs(), {}); // 会创建一个CallNode实例
+}
+
 TVM_REGISTER_GLOBAL("relay.op._make.dxt_axis_abs").set_body_typed(MakeDXTAxisAbs);
+TVM_REGISTER_GLOBAL("relay.op._make.my_ts_mean").set_body_typed(MakeMyTsMean);
 
 // Array<te::Tensor> TsSumCompute(const Attrs& attrs, const Array<te::Tensor>& inputs,
 //             const Type& out_type) {
@@ -4631,7 +4637,18 @@ Expr MakeTsMedian(Expr data, int window, int axis) {
 }
 TVM_REGISTER_GLOBAL("relay.op._make.ts_median")
     .set_body_typed(MakeTsMedian);
-
+bool MyTsMeanRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+               const TypeReporter& reporter) {
+    const auto* data = types[0].as<TensorTypeNode>();
+    const auto* window = types[1].as<TensorTypeNode>();
+    if (data->shape.size() != 1 || window->shape.size() != 1) {
+      return false;
+    }
+    //std::cout << "data->dtype: " << data->dtype << std::endl;
+    Type scalar_type = TensorType({}, data->dtype);  // 表示一个标量 int32/float32
+    reporter->Assign(types[2], TupleType({TensorType(data->shape, data->dtype), scalar_type}));
+    return true;
+}
 bool DXTAxisAbsRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
                const TypeReporter& reporter) {
     // types: [data, output]
@@ -4666,6 +4683,14 @@ RELAY_REGISTER_OP("dxt_axis_abs")
     .add_argument("data", "Tensor", "The input tensor")
     .set_support_level(3)
     .add_type_rel("dxt_axis_abs", DXTAxisAbsRel)
+    .set_attr<TOpPattern>("TOpPattern", kOpaque);
+RELAY_REGISTER_OP("my_ts_mean")
+    .describe(R"doc(Computes the axis abs of a tensor.)doc" TVM_ADD_FILELINE)
+    .set_num_inputs(2)
+    .add_argument("data", "Tensor", "The input tensor")
+    .add_argument("window", "Tensor", "The window tensor")
+    .set_support_level(3)
+    .add_type_rel("my_ts_mean", MyTsMeanRel)
     .set_attr<TOpPattern>("TOpPattern", kOpaque);
 TVM_REGISTER_NODE_TYPE(DXTAxisAbsAttrs);
 }  // namespace relay

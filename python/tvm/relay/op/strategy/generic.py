@@ -2272,3 +2272,14 @@ def dxt_axis_abs_strategy(attrs, inputs, out_type, target):
         name="dxt_axix_abs.generic",
     )
     return strategy
+
+@override_native_generic_func("my_ts_mean_strategy")
+def my_ts_mean_strategy(attrs, inputs, out_type, target):
+    """axis_abs generic strategy"""
+    strategy = _op.OpStrategy()
+    strategy.add_implementation(
+        empty_compute,
+        empty_schedule,
+        name="my_ts_mean.generic",
+    )
+    return strategy
